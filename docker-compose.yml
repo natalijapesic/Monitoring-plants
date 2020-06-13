@@ -1,0 +1,98 @@
+version: '3.0'
+services:
+    influxdata:
+      image: influxdb
+      container_name: influxData
+      environment: 
+        - INFLUXDB_ADMIN_ENABLED=true
+      volumes:
+        - influxvolumedata:/var/lib/datainflux.db
+      ports:
+        - 8086:8086
+    influxanalytics:
+      image: influxdb
+      container_name: influxAnalytics
+      environment: 
+        - INFLUXDB_ADMIN_ENABLED=true
+      volumes:
+        - influxvolumeanalytics:/var/lib/analyticsinflux.db
+      ports:
+        - 8087:8086
+    nats:
+      image: nats:latest
+      container_name: nats
+    gateway:
+      build:
+        context: .
+      container_name: gateway
+      image: service-gateway
+      env_file: docker-compose.env
+      environment:
+        NODEID: "node-gateway"
+        SERVICES: gateway
+        PORT: 3000
+      ports:
+        - 3000:3000
+      depends_on:
+        - nats
+    data:
+      build:
+        context: .
+      container_name: data
+      image: service-data
+      env_file: docker-compose.env
+      environment:
+        NODEID: "node-data"
+        SERVICES: data
+        ADMIN_USER: admin
+        ADMIN_PASSWORD: admin
+        INFLUXDB_DATABASE: plants
+        INFLUXDB_HOST: influxdata
+      depends_on:
+        - nats
+        - influxdata
+    device:
+      build:
+        context: .
+      container_name: device
+      image: service-device
+      env_file: docker-compose.env
+      environment:
+        NODEID: "node-device"
+        SERVICES: device
+      depends_on:
+        - nats
+    grafana:
+      ports:
+        - 4200:3000
+      container_name: WEBdashboard
+      image:
+        grafana/grafana:3.1.1
+      depends_on:
+        - influxanalytics
+        - influxdata
+      links:
+        - influxanalytics
+        - influxdata
+      volumes:
+        - influxvolumedata:/var/lib/datainflux.db
+        - influxvolumeanalytics:/var/lib/analyticsinflux.db
+    analytics:
+      build:
+        context: ./analytics
+      container_name: analytics
+      image: service-analytics
+      depends_on:
+        - influxanalytics       
+      ports:
+        - 6000:80
+    command:
+      build:
+        context: ./command
+      container_name: command
+      image: service-command
+      ports:
+        - 5000:80
+volumes:
+  influxvolumedata:
+  influxvolumeanalytics:

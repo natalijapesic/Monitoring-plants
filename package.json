@@ -1,0 +1,22 @@
+{
+  "name": "monitoring-plants",
+  "version": "1.0.0",
+  "description": "IoT solution for monitoring plants",
+  "main": "main.js",
+  "scripts": {
+    "start": "moleculer-runner",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "moshi",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "influx": "^5.5.1",
+    "moleculer": "^0.14.7",
+    "moleculer-db": "^0.8.8",
+    "moleculer-web": "^0.9.1",
+    "nats": "^1.4.9",
+    "request": "^2.88.2"
+  }
+}
