@@ -11,35 +11,105 @@ app = Flask(__name__)
 
 COMMAND_URL = "http://command/api/Command/commands"
 
+MIN_TAIR = 0
+MAX_TAIR = 15 
+
+MIN_TSOIL = 0
+MAX_TSOIL = 7
+
+MIN_RHPERCENT = 40
+MAX_RHPERCENT = 80
+
+MIN_WATERCONTENT = 0.05
+MAX_WATERCONTENT = 0.15
+
 # -------------------------------------------------------------------------------------------------
 
 def print_log(*args, **kwargs):
     print(*args, file=stderr, **kwargs)
 
-def evaluateData(airTemperature, soilTemperature, RHpercent, waterContent, sensorId):
-    command = { 'sensorId': sensorId,
-                'commandType': 'HUMIDIFIER',
-                'commandText': 'SET',
-                'setValue': -1
-    }
+def turnWaterPumpOnOrOff(commandList, notificationList, sensorId, value, min, max):
+    commandText = 'OFF'
+    commandType = 'WATERPUMP'
+    info = None
+
+    if value < min:
+        commandText = 'ON'
+        info = 'Soil water content is too low'
     
+    if value > max:
+        commandText = 'OFF'
+        info = 'Soil water content is too high'
+
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
 
-    notificationInfo = "Temperature too high! Turning air cooler ON."
+    commandList.append({
+        'sensorId': sensorId,
+        'commandType': commandType,
+        'commandText': commandText,
+        'setValue': value
+    })
 
-    notificationData = [{
+    if info is not None:
+        notificationList.append({
             "measurement": "notificationData",
             "tags": {
                 "type": "notifications"
             },
             "time": current_time,
             "fields": {
-                "info": notificationInfo
+                "info": info
             }
-        }]
+        })
+
+def inreaseOrDecreaseLevel(commandList, notificationList, sensorId, value, commandType, min, max, paramName):
+    commandText = None
+    info = None
+
+    if value < min:
+        commandText = 'INCREASE'
+        info = paramName + ' value is too low'
+    elif value > max:
+        commandText = 'DECREASE'
+        info = paramName + ' value is too high'
+    else:
+        return
     
-    return notificationData, command
+    now = datetime.now()
+    current_time = now.strftime("%H:%M:%S")
+
+    commandList.append({
+        'sensorId': sensorId,
+        'commandType': commandType,
+        'commandText': commandText,
+        'setValue': value
+    })
+
+    if info is not None:
+        notificationList.append({
+            "measurement": "notificationData",
+            "tags": {
+                "type": "notifications"
+            },
+            "time": current_time,
+            "fields": {
+                "info": info
+            }
+        })
+
+def evaluateData(airTemperature, soilTemperature, RHpercent, waterContent, sensorId):
+    
+    commandList = []
+    notificationList = []
+
+    inreaseOrDecreaseLevel(commandList, notificationList, sensorId, airTemperature, 'AIRCOOLER', MIN_TAIR, MAX_TAIR, 'Air temperature')
+
+    inreaseOrDecreaseLevel(commandList, notificationList, sensorId, RHpercent, 'HUMIDIFIER', MIN_RHPERCENT, MAX_RHPERCENT, 'Relative humidity')
+
+    turnWaterPumpOnOrOff(commandList, notificationList, sensorId, waterContent, MIN_WATERCONTENT, MAX_WATERCONTENT)
+    
+    return commandList, notificationList
 
 # -------------------------------------------------------------------------------------------------
 
@@ -60,14 +130,15 @@ def Post():
 
         print_log(request.json)
         
-        notificationData, command = evaluateData(request.json['airTemperature'], request.json['soilTemperature'], request.json['RHpercent'], request.json['waterContent'], request.json['sensorId'])
+        commands, notificationData = evaluateData(request.json['airTemperature'], request.json['soilTemperature'], request.json['RHpercent'], request.json['waterContent'], request.json['sensorId'])
 
-        res = requests.post(COMMAND_URL, json = command)
-        print_log(res.text)
+        for command in commands:
+            res = requests.post(COMMAND_URL, json = command)
+            print_log(res.text)
 
         result = client.write_points(notificationData)
         
-        return jsonify({"Notification saved to database" : str(result), "message": str(res.json)})
+        return jsonify({"Notifications saved to database" : str(result)})
 
 # -------------------------------------------------------------------------------------------------
 
