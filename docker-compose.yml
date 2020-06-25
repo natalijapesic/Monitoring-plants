@@ -62,21 +62,14 @@ services:
         SERVICES: device
       depends_on:
         - nats
-    grafana:
+    bokeh:
       ports:
-        - 4200:3000
+        - 5006:5006
       container_name: WEBdashboard
-      image:
-        grafana/grafana:3.1.1
       depends_on:
-        - influxanalytics
-        - influxdata
-      links:
-        - influxanalytics
-        - influxdata
-      volumes:
-        - influxvolumedata:/var/lib/datainflux.db
-        - influxvolumeanalytics:/var/lib/analyticsinflux.db
+        - gateway
+      build:
+        context: ./dashboard
     analytics:
       build:
         context: ./analytics

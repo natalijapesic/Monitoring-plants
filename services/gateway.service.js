@@ -64,7 +64,7 @@ module.exports = {
             console.log(body);
             return Promise.resolve()
             .then(() => {
-                return this.broker.call('increaseOrDecreaseHumidifierLevel', body).then(result =>
+                return this.broker.call('device.increaseOrDecreaseHumidifierLevel', body).then(result =>
                     res.send(result)
                 );
             })
