@@ -42,7 +42,7 @@ module.exports = {
             console.log(body);
             return Promise.resolve()
             .then(() => {
-                return this.broker.call('device.increaseOrDecreaseAirCoolerLevel', body).then(result =>
+                return this.broker.call('device.inreaseOrDecreaseAirCoolerLevel', body).then(result =>
                     res.send(result)
                 );
             })

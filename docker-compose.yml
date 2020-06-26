@@ -64,7 +64,7 @@ services:
         - nats
     bokeh:
       ports:
-        - 5006:5006
+        - 7000:80
       container_name: WEBdashboard
       depends_on:
         - gateway

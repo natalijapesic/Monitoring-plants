@@ -39,13 +39,13 @@ module.exports = {
                 return 'Success setting parameter!';
             }
         },
-        inreaseOrDecreaseHumidifierLevel: {
+        increaseOrDecreaseHumidifierLevel: {
             params: {
                 sensorId: { type: "number" },
                 offset: { type: "number" }
 			},
             async handler(ctx) {
-               console.log('Received " inreaseOrDecreaseHumidifierLevel" put request with payload: ', ctx.params);
+               console.log('Received " increaseOrDecreaseHumidifierLevel" put request with payload: ', ctx.params);
                this.humidifierHumidityLevel += ctx.params.offset;
                return 'Success setting parameter!';
             }

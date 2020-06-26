@@ -1,2 +1,0 @@
-gateway primi zahtev od korisnika i zove odg mikrosrvice
-u data mikroserice ima ruta koja kada se pozove ona procita iz baze podatke i vrati taj rezul gatewayu i onda gw vrati klijentu
