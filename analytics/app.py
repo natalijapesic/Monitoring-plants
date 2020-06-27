@@ -77,7 +77,7 @@ def inreaseOrDecreaseLevel(commandList, notificationList, sensorId, value, comma
         return
     
     now = datetime.now()
-    current_time = now.strftime("%H:%M:%S")
+    current_time = str(now)
 
     commandList.append({
         'sensorId': sensorId,
@@ -143,7 +143,7 @@ def Post():
 # -------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    client = InfluxDBClient(host="influxanalytics", port=8086, username='admin', password='admin')
+    client = InfluxDBClient(host = "influxanalytics", port = 8086, username = 'admin', password = 'admin')
     client.create_database('analytics')
     client.switch_database('analytics')
-    app.run(debug=True, host='0.0.0.0', port=80)
+    app.run(debug = True, host = '0.0.0.0', port = 80)
