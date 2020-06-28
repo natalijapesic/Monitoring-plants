@@ -16,11 +16,6 @@ namespace command.Controllers
     [Route("/api/[controller]")]
     public class CommandController : ControllerBase
     {
-       
-        //private static float humidifierOffset = 5;
-        //private static float airCoolerOffset = 0.5f;
-        //private static float waterPumpOffset = 1;
-
         private static BaseActuator humidifier = new BaseActuator(5, 100, 0);
 
         private static BaseActuator waterPump = new BaseActuator(1, 80, 0);
@@ -31,7 +26,8 @@ namespace command.Controllers
         }
 
         [HttpGet("getCommands")] 
-        public ActionResult<string> Get() {
+        public ActionResult<string> Get() 
+        {
             List<string> commandText = new List<string>();
             commandText.Add("INCREASE");
             commandText.Add("DECREASE");
@@ -44,50 +40,91 @@ namespace command.Controllers
             commandType.Add("WATERPUMP");
             commandType.Add("HUMIDIFIER");
 
-            //string response = JsonConvert.SerializeObject(new CommandInfoModel(commandType, commandText, humidifier, waterPump, airCooler));
-            Object asd = true;
-            string response = JsonConvert.SerializeObject(asd);
-            
-            return Ok(response);
+            string response = JsonConvert.SerializeObject(new CommandInfoModel(commandType, commandText, humidifier, waterPump, airCooler));
+                  
+            return new JsonResult(
+                new 
+                {
+                    message = response 
+                }
+            );
+        }
+
+        private string GetActuatorCommandParameters(BaseActuator actuator) 
+        {
+            return JsonConvert.SerializeObject(actuator);
+        }
+
+        [HttpGet("getHumidifierParameters")] 
+        public ActionResult<string> GetHumidifierParameters() 
+        {
+            return new JsonResult(
+                new 
+                {
+                    message = GetActuatorCommandParameters(humidifier) 
+                }
+            );
+        }
+
+        [HttpGet("getWaterPumpParameters")] 
+        public ActionResult<string> GetWaterPumpParameters() 
+        {
+            return new JsonResult(
+                new 
+                {
+                    message = GetActuatorCommandParameters(waterPump) 
+                }
+            );
+        }
+
+        [HttpGet("getAirCoolerParameters")] 
+        public ActionResult<string> GetAirCoolerParameters() 
+        {
+            return new JsonResult(
+                new 
+                {
+                    message = GetActuatorCommandParameters(airCooler) 
+                }
+            );
         }
 
         private string determineRequestUri(string commandText, string commandType)
-            {
-                string requestUri = "http://gateway:3000/";
+        {
+            string requestUri = "http://gateway:3000/";
 
-                switch(commandText) {
-                    case "ON":
-                    case "OFF":
-                        requestUri += "turnOnOrOff";
-                        break;
-                    case "INCREASE":
-                    case "DECREASE":
-                        requestUri += "addOffset";
-                        break;
-                    case "SET":
-                        requestUri += "setValue";
-                        break;
-                    default: 
-                        break;
-                }
-
-                switch(commandType) {
-                    case "HUMIDIFIER":
-                        requestUri += "/humidifier";
-                        break;
-                    case "AIRCOOLER":
-                        requestUri += "/airCooler";
-                        break;
-                    case "WATERPUMP":
-                        requestUri += "/waterPump";
-                        break;
-                    default: 
-                        break;
-                }
-
-                return requestUri;
-
+            switch(commandText) {
+                case "ON":
+                case "OFF":
+                    requestUri += "turnOnOrOff";
+                    break;
+                case "INCREASE":
+                case "DECREASE":
+                    requestUri += "addOffset";
+                    break;
+                case "SET":
+                    requestUri += "setValue";
+                    break;
+                default: 
+                    break;
             }
+
+            switch(commandType) {
+                case "HUMIDIFIER":
+                    requestUri += "/humidifier";
+                    break;
+                case "AIRCOOLER":
+                    requestUri += "/airCooler";
+                    break;
+                case "WATERPUMP":
+                    requestUri += "/waterPump";
+                    break;
+                default: 
+                    break;
+            }
+
+            return requestUri;
+
+        }
 
         private bool goodCommandFormat(string commandText, string commandType)
         {   
@@ -134,6 +171,8 @@ namespace command.Controllers
 
             string requestUri = determineRequestUri(commandText, commandType);
 
+            float offset = 0;
+
             switch(commandType) {
                 case "HUMIDIFIER":
                     actuator = humidifier;
@@ -147,6 +186,8 @@ namespace command.Controllers
                 default: 
                     break;
             }
+
+            offset = actuator.Offset;
                 
             switch(commandText) {
                 case "ON":
@@ -159,11 +200,13 @@ namespace command.Controllers
 
                     json = JsonConvert.SerializeObject(new TurnOnOrOffCommandModel(sensorId, actuatorOn));
                     break;
-                case "INCREASE":
                 case "DECREASE":
+                case "INCREASE":
+                    if(commandText == "DECREASE")
+                        offset *= -1;
                     if(!actuator.valueInBounds(value))
                         return new Response("New value not in [MIN, MAX] bounds", "Command not sent (new value out of bounds)", false, "");
-                        json = JsonConvert.SerializeObject(new AddOffsetCommandModel(sensorId, actuator.Offset));
+                        json = JsonConvert.SerializeObject(new AddOffsetCommandModel(sensorId, offset));
                     break;
                 case "SET":
                     json = JsonConvert.SerializeObject(new SetValueCommandModel(sensorId, value));
@@ -173,7 +216,6 @@ namespace command.Controllers
             }
             return new Response("Command OK!", json, true, requestUri);
         }
-
 
         [HttpPost("commands")]
         public async Task<IActionResult> Post(AnalyticsData data)
@@ -207,15 +249,30 @@ namespace command.Controllers
             );
         }
 
-        [HttpPut("setOffset/humidifier")]
-        public ActionResult<string> PutHumidifierOffset (SetCommandParameterModel data)
+        private void ModifyData(BaseActuator actuator, string parameter, float value)
         {
-            
-            Console.WriteLine("Received POST request with payload:");
+            switch(parameter) {
+                case "OFFSET":
+                    actuator.Offset = value;
+                    break;
+                case "MIN":
+                    actuator.MinValue = value;
+                    break;
+                case "MAX":
+                    actuator.MaxValue = value;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private JsonResult PutRequest(BaseActuator actuator, string parameter, SetCommandParameterModel data) 
+        {
+            Console.WriteLine("Received PUT request with payload:");
             Console.WriteLine(JsonConvert.SerializeObject(data));
 
-            humidifier.Offset = data.Value;
-            
+            ModifyData(actuator, parameter, data.Value);
+
             return new JsonResult(
                 new 
                 {
@@ -223,138 +280,59 @@ namespace command.Controllers
                 }
             );
         }
-       [HttpPut("setOffset/waterPump")]
+
+        [HttpPut("setOffset/humidifier")]
+        public ActionResult<string> PutHumidifierOffset (SetCommandParameterModel data)
+        {
+            return PutRequest(humidifier, "OFFSET", data);
+        }
+ 
+        [HttpPut("setOffset/waterPump")]
         public ActionResult<string> PutWaterPumpOffset (SetCommandParameterModel data)
         {
-            
-            Console.WriteLine("Received POST request with payload:");
-            Console.WriteLine(JsonConvert.SerializeObject(data));
-
-            waterPump.Offset = data.Value;
-            
-            return new JsonResult(
-                new 
-                {
-                    message = "Parameter set!" 
-                }
-            );
+            return PutRequest(waterPump, "OFFSET", data);
         }
 
         [HttpPut("setOffset/airCooler")]
         public ActionResult<string> PutAirCoolerOffset (SetCommandParameterModel data)
         {
-            
-            Console.WriteLine("Received POST request with payload:");
-            Console.WriteLine(JsonConvert.SerializeObject(data));
-
-            airCooler.Offset = data.Value;
-            
-            return new JsonResult(
-                new 
-                {
-                    message = "Parameter set!" 
-                }
-            );
+            return PutRequest(airCooler, "OFFSET", data);
         }
 
         [HttpPut("setMax/humidifier")]
         public ActionResult<string> PutHumidifierMax (SetCommandParameterModel data)
         {
-            
-            Console.WriteLine("Received POST request with payload:");
-            Console.WriteLine(JsonConvert.SerializeObject(data));
-
-            humidifier.MaxValue = data.Value;
-            
-            return new JsonResult(
-                new 
-                {
-                    message = "Parameter set!" 
-                }
-            );
+           return PutRequest(humidifier, "MAX", data);
         }
-       [HttpPut("setMax/waterPump")]
+
+        [HttpPut("setMax/waterPump")]
         public ActionResult<string> PutWaterPumpMax (SetCommandParameterModel data)
         {
-            
-            Console.WriteLine("Received POST request with payload:");
-            Console.WriteLine(JsonConvert.SerializeObject(data));
-
-            waterPump.MaxValue = data.Value;
-            
-            return new JsonResult(
-                new 
-                {
-                    message = "Parameter set!" 
-                }
-            );
+            return PutRequest(waterPump, "MAX", data);
         }
 
         [HttpPut("setMax/airCooler")]
         public ActionResult<string> PutAirCoolerMax (SetCommandParameterModel data)
         {
-            
-            Console.WriteLine("Received POST request with payload:");
-            Console.WriteLine(JsonConvert.SerializeObject(data));
-
-            airCooler.MaxValue = data.Value;
-            
-            return new JsonResult(
-                new 
-                {
-                    message = "Parameter set!" 
-                }
-            );
+            return PutRequest(airCooler, "MAX", data);
         }
 
-          [HttpPut("setMin/humidifier")]
+        [HttpPut("setMin/humidifier")]
         public ActionResult<string> PutHumidifierMin (SetCommandParameterModel data)
         {
-            
-            Console.WriteLine("Received POST request with payload:");
-            Console.WriteLine(JsonConvert.SerializeObject(data));
-
-            humidifier.MinValue = data.Value;
-            
-            return new JsonResult(
-                new 
-                {
-                    message = "Parameter set!" 
-                }
-            );
+            return PutRequest(humidifier, "MIN", data);
         }
-       [HttpPut("setMin/waterPump")]
+       
+        [HttpPut("setMin/waterPump")]
         public ActionResult<string> PutWaterPumpMin (SetCommandParameterModel data)
         {
-            
-            Console.WriteLine("Received POST request with payload:");
-            Console.WriteLine(JsonConvert.SerializeObject(data));
-
-            waterPump.MinValue = data.Value;
-            
-            return new JsonResult(
-                new 
-                {
-                    message = "Parameter set!" 
-                }
-            );
+            return PutRequest(waterPump, "MIN", data);
         }
 
         [HttpPut("setMin/airCooler")]
         public ActionResult<string> PutAirCoolerMin (SetCommandParameterModel data)
         {
-            
-            Console.WriteLine("Received POST request with payload:");
-            Console.WriteLine(JsonConvert.SerializeObject(data));
-
-            airCooler.MinValue = data.Value;
-            
-            return new JsonResult(
-                new 
-                {
-                    message = "Parameter set!" 
-                }
-            );
+            return PutRequest(airCooler, "MIN", data);
         }
     }
 }

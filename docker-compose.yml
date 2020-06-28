@@ -62,10 +62,10 @@ services:
         SERVICES: device
       depends_on:
         - nats
-    bokeh:
+    dashboard:
       ports:
         - 7000:80
-      container_name: WEBdashboard
+      container_name: dashboard
       depends_on:
         - gateway
       build:
@@ -76,7 +76,8 @@ services:
       container_name: analytics
       image: service-analytics
       depends_on:
-        - influxanalytics       
+        - influxanalytics
+        - dashboard
       ports:
         - 6000:80
     command:

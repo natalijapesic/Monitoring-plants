@@ -28,15 +28,15 @@ module.exports = {
 				return res;
 			}
         },
-        inreaseOrDecreaseWaterPumpLevel: {
+        increaseOrDecreaseWaterPumpLevel: {
             params: {
                 sensorId: { type: "number" },
                 offset: { type: "number" }
 			},
             async handler(ctx) {
-                console.log('Received "inreaseOrDecreaseWaterPumpLevel" put request with payload: ', ctx.params);
+                console.log('Received "increaseOrDecreaseWaterPumpLevel" put request with payload: ', ctx.params);
                 this.waterPumpLitersPerMinute += ctx.params.offset;
-                return 'Success setting parameter!';
+                return JSON.stringify('Success setting parameter!');
             }
         },
         increaseOrDecreaseHumidifierLevel: {
@@ -47,7 +47,7 @@ module.exports = {
             async handler(ctx) {
                console.log('Received " increaseOrDecreaseHumidifierLevel" put request with payload: ', ctx.params);
                this.humidifierHumidityLevel += ctx.params.offset;
-               return 'Success setting parameter!';
+               return JSON.stringify('Success setting parameter!');
             }
         },
         inreaseOrDecreaseAirCoolerLevel: {
@@ -59,7 +59,7 @@ module.exports = {
                console.log('Received "inreaseOrDecreaseAirCoolerLevel" put request with payload: ', ctx.params);
                
                this.airCoolerTemperature += ctx.params.offset;
-               return 'Success setting parameter!';
+               return JSON.stringify('Success setting parameter!');
             }
         },
         turnWaterPumpOnOrOff: {
@@ -70,7 +70,7 @@ module.exports = {
             async handler(ctx) {
                console.log('Received "turnWaterPumpOnOrOff" put request with payload: ', ctx.params);
                this.waterPumpOn = ctx.params.value;
-               return 'Success setting parameter!';
+               return JSON.stringify('Success setting parameter!');
             }
         },
         turnAirCoolingOnOrOff: {
@@ -81,7 +81,7 @@ module.exports = {
             async handler(ctx) {
                console.log('Received "turnAirCoolingOnOrOff" put request with payload: ', ctx.params);
                this.airCoolingOn = ctx.params.value;
-               return 'Success setting parameter!';
+               return JSON.stringify('Success setting parameter!');
             }
         },
         turnHumidifierOnOrOff: {
@@ -92,7 +92,7 @@ module.exports = {
             async handler(ctx) {
                console.log('Received "turnHumidifierOnOrOff" put request with payload: ', ctx.params);
                this.humidifierOn = ctx.params.value;
-               return 'Success setting parameter!';
+               return JSON.stringify('Success setting parameter!');
             }
         },
         setHumidifierHumidityLevel: {
@@ -103,7 +103,7 @@ module.exports = {
             async handler(ctx) {
                console.log('Receieved "setHumidifierHumidityLevel" put request with payload: ', ctx.params);
                this.humidifierHumidityLevel = ctx.params.value;
-               return 'Success setting parameter!';
+               return JSON.stringify('Success setting parameter!');
             }
         },
         setWaterPumpLitersPerMinute: {
@@ -114,7 +114,7 @@ module.exports = {
             async handler(ctx) {
                console.log('Receieved "setWaterPumpLitersPerMinute" put request with payload: ', ctx.params);
                this.waterPumpLitersPerMinute = ctx.params.value;
-               return 'Success setting parameter!';
+               return JSON.stringify('Success setting parameter!');
             }
         },
         setAirCoolerTemperature: {
@@ -125,18 +125,17 @@ module.exports = {
             async handler(ctx) {
                console.log('Receieved "setAirCoolerTemperature" put request with payload: ', ctx.params);
                this.airCoolerTemperature = ctx.params.value;
-               return 'Success setting parameter!';
+               return JSON.stringify('Success setting parameter!');
             }
         },
         changeReadInterval: {
             params: {
-                sensorId: { type: "number" },
                 value: { type: "number" }
 			},
             async handler(ctx) {
                console.log('Receieved "changeReadInterval" put request with payload: ', ctx.params);
                this.interval = ctx.params.value;
-               return 'Success setting parameter!';
+               return JSON.stringify('Success setting parameter!');
             }
         }
     },

@@ -4,6 +4,9 @@ import requests
 from bokeh.embed import components
 from bokeh.models import AjaxDataSource, CustomJS
 from sys import stderr
+from bokeh.models.widgets import DataTable, TableColumn
+from datetime import datetime
+from bokeh.models.layouts import WidgetBox
 
 # -------------------------------------------------------------------------------------------------
 
@@ -13,6 +16,7 @@ TAIR_URL = 'http://gateway:3000/airTemperature?id=1'
 TSOIL_URL = 'http://gateway:3000/soilTemperature?id=1'
 RHPERCENT_URL = 'http://gateway:3000/RHpercent?id=1'
 WATERCONTENT_URL = 'http://gateway:3000/waterContent?id=1'
+NOTIFICATIONS_URL = 'http://gateway:3000/notifications'
 
 # -------------------------------------------------------------------------------------------------
 
@@ -23,27 +27,58 @@ def getData(url, key, value):
     res = requests.get(url)
     pts = res.json()
     pts = pts[key]
-    #print_log(pts)
+
     x = []
     y = []
     for i, data in enumerate(pts):
         y.append(data[value])
         x.append(i)
     return { 'x': x, 'y': y}
-
-def makePlot(period, route):
+    
+def makePlot(period, route, title, line_color):
     source = AjaxDataSource(data_url = request.url_root + route, polling_interval = period, method = 'GET', mode = 'replace')
     
     source.data = dict(x=[], y=[])
     
-    plot = figure(plot_height = 300, sizing_mode = 'scale_width')
+    plot = figure(plot_height = 200, plot_width = 500, sizing_mode = 'scale_width', title = title)
     
-    plot.line('x', 'y', source = source, line_width = 4)  
+    plot.line('x', 'y', source = source, line_width = 4, line_color = line_color)  
     
     script, div = components(plot)
     
     return script, div
+
+def makeTable(period, route):
+    source = AjaxDataSource(data_url = request.url_root + route, polling_interval = period, method = 'GET', mode = 'replace')
+    
+    source.data = dict(x = [], y = [])
+    colx = TableColumn(field = "x", title = "Time")
+    coly = TableColumn(field = "y", title = "Info")
+    table = DataTable(source = source, columns = [colx, coly], height = 300)
+    
+    script, div = components(table)
+    
+    return script, div
+
 # -------------------------------------------------------------------------------------------------    
+
+@app.route('/api/NotificationData', methods = ['GET'])
+def GetNotificationData():
+    if request.method == 'GET':
+        x = []
+        y = []
+        
+        res = requests.get(NOTIFICATIONS_URL)
+        pts = res.json()
+        pts = pts['data']['series'][0]['values']
+
+        #print_log(pts)
+
+        for notification in pts:
+            x.append(notification[0])
+            y.append(notification[1])
+
+        return { 'x': x, 'y': y}
 
 @app.route('/api/Dashboard', methods = ['GET'])
 def ShowDashboard():
@@ -55,7 +90,9 @@ def ShowDashboard():
         plots.append(makeSoilTemperaturePlot())
         plots.append(makeRHpercentPlot())
         plots.append(makeWaterContentPlot())
-        return render_template('dashboard.html', plots = plots)
+        table = makeTable(10000, '/api/NotificationData')
+        
+        return render_template('dashboard.html', plots = plots, table = table)
 
 @app.route('/api/AirTemperature', methods = ['GET'])
 def GetAirTemperature():
@@ -80,18 +117,19 @@ def GetWaterContent():
 # -------------------------------------------------------------------------------------------------
 
 def makeAirTemperaturePlot():
-    return makePlot(10000, '/api/AirTemperature')
+    return makePlot(10000, '/api/AirTemperature', "Air temperature on Y ", "gray")
 
 def makeSoilTemperaturePlot():
-    return makePlot(10000, '/api/SoilTemperature')
+    return makePlot(10000, '/api/SoilTemperature', "Soil temperature on Y ", "black")
 
 def makeRHpercentPlot():
-    return makePlot(10000, '/api/RHpercent')
+    return makePlot(10000, '/api/RHpercent', "RH percent on Y ", "red")
 
 def makeWaterContentPlot():
-    return makePlot(10000, '/api/WaterContent')      
+    return makePlot(10000, '/api/WaterContent', "Water content on Y ", "blue")
 
 # -------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    app.run(debug = True, host = '0.0.0.0', port = 80)
+      app.run(debug = False, host = '0.0.0.0', port = 80)
+

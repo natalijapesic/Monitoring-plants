@@ -1,13 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
+
   <head>
+
+    <!-- Static includes-->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
     <!-- Bokeh includes-->
     <link rel="stylesheet" href="http://cdn.pydata.org/bokeh/release/bokeh-1.0.0.min.css" type="text/css" />
     <script type="text/javascript" src="http://cdn.pydata.org/bokeh/release/bokeh-1.0.0.min.js"></script>
+
+	  <!-- Table includes-->
+	  <link href="http://cdn.bokeh.org/bokeh/release/bokeh-tables-1.0.0.min.css" rel="stylesheet" type="text/css">
+    <script src="http://cdn.bokeh.org/bokeh/release/bokeh-tables-1.0.0.min.js"></script>
+    
   </head>
+
   <body>
-    <div>
-        {% block body %}{% endblock %}
-    </div>
+	<div class = "rightContainer">
+      <div class = "forms">
+        <div class = "formDiv">
+          <label for = "period">Change device read interval</label>
+          <input type = "number" name = "periodInput" id = "period" min = "0">
+          <button id = "periodButton" type = "button" >Submit</button>
+        </div>
+        <div class = "formDiv">
+          <label for = "air">Change air cooler offset</label>
+          <input type = "number" name = "airInput" id = "air" min = "0">
+          <button id = "airButton" type = "button" >Submit</button>
+        </div>
+        <div class = "formDiv">
+          <label for = "water">Change water pump offset</label>
+          <input type = "number" name = "waterInput" id = "water" min = "0">
+          <button id = "waterButton" type = "button" >Submit</button>
+        </div>
+        <div class = "formDiv">
+          <label for = "humidifier">Change humidifier offset</label>
+          <input type = "number" name = "humidifierInput" id = "humidifier" min = "0">
+          <button id = "humidifierButton" type = "button" >Submit</button>
+        </div>
+      </div>
+
+      <div class = "table">
+        {% for part in table %}
+              {{part | safe}}
+        {% endfor %}
+      </div>
+	</div>
+	
+    {% block body %}{% endblock %}
+  
+    <script type="text/javascript" src="{{ url_for('static', filename='async.js') }}"></script>
+
   </body>
 </html>

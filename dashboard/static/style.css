@@ -1,0 +1,31 @@
+html{
+    background-color: rgb(63, 63, 63);
+    font-weight: bold;
+    font-size: 130%;
+}
+
+.rightContainer {
+	display: flex;
+	flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+	
+}
+
+.table {
+	display: flex;
+	flex-grow: 1.0;
+}
+
+.forms {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1.0;
+}
+
+.formDiv {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1.0;
+}
+

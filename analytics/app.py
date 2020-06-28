@@ -7,9 +7,8 @@ from sys import stderr
 
 # -------------------------------------------------------------------------------------------------
 
-app = Flask(__name__)
-
 COMMAND_URL = "http://command/api/Command/commands"
+DASHBOARD_URL = "http://dashboard/api/Dashboard/receiveNotifications"
 
 MIN_TAIR = 0
 MAX_TAIR = 15 
@@ -22,6 +21,8 @@ MAX_RHPERCENT = 80
 
 MIN_WATERCONTENT = 0.05
 MAX_WATERCONTENT = 0.15
+
+app = Flask(__name__)
 
 # -------------------------------------------------------------------------------------------------
 
@@ -42,7 +43,7 @@ def turnWaterPumpOnOrOff(commandList, notificationList, sensorId, value, min, ma
         info = 'Soil water content is too high'
 
     now = datetime.now()
-    current_time = now.strftime("%H:%M:%S")
+    current_time = str(now)
 
     commandList.append({
         'sensorId': sensorId,
@@ -122,7 +123,7 @@ def GetDatabaseName():
 def GetData():
     if request.method == 'GET':
         results = client.query('SELECT * FROM "analytics"."autogen"."notificationData"')
-        return jsonify(results)
+        return jsonify({'data': results.raw })
     
 @app.route('/api/Analysis/receiveData', methods = ['POST'])
 def Post():
@@ -137,7 +138,7 @@ def Post():
             print_log(res.text)
 
         result = client.write_points(notificationData)
-        
+
         return jsonify({"Notifications saved to database" : str(result)})
 
 # -------------------------------------------------------------------------------------------------
@@ -146,4 +147,5 @@ if __name__ == '__main__':
     client = InfluxDBClient(host = "influxanalytics", port = 8086, username = 'admin', password = 'admin')
     client.create_database('analytics')
     client.switch_database('analytics')
-    app.run(debug = True, host = '0.0.0.0', port = 80)
+      
+    app.run(debug = False, host = '0.0.0.0', port = 80)
