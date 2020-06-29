@@ -40,9 +40,9 @@ def makePlot(period, route, title, line_color):
     
     source.data = dict(x=[], y=[])
     
-    plot = figure(plot_height = 200, plot_width = 500, sizing_mode = 'scale_width', title = title)
-    
-    plot.line('x', 'y', source = source, line_width = 4, line_color = line_color)  
+    plot = figure(plot_height = 200, plot_width = 800, title = title)
+
+    plot.line('x', 'y', source = source, line_width = 1, line_color = line_color)  
     
     script, div = components(plot)
     
@@ -54,7 +54,7 @@ def makeTable(period, route):
     source.data = dict(x = [], y = [])
     colx = TableColumn(field = "x", title = "Time")
     coly = TableColumn(field = "y", title = "Info")
-    table = DataTable(source = source, columns = [colx, coly], height = 300)
+    table = DataTable(source = source, columns = [colx, coly], height = 800, width = 500)
     
     script, div = components(table)
     

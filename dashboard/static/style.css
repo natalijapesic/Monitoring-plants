@@ -1,31 +1,39 @@
-html{
-    background-color: rgb(63, 63, 63);
+body{
+    display: flex;
+    background-image: url("background.jpg");
     font-weight: bold;
-    font-size: 130%;
+    flex-direction: column;
+    font-size: 110%;
 }
 
 .rightContainer {
 	display: flex;
-	flex-direction: column;
+	flex-direction: row;
     justify-content: space-around;
     align-items: center;
 	
 }
 
 .table {
-	display: flex;
-	flex-grow: 1.0;
+    display: flex;
+    margin-left: 5%;
+    margin-right: 5%;
 }
 
 .forms {
     display: flex;
     flex-direction: column;
-    flex-grow: 1.0;
 }
 
 .formDiv {
     display: flex;
+    flex-direction: column;
+    margin: 5%;
+}
+
+.bokeh{
+    display: flex;
+    margin: 5%;
     flex-direction: row;
-    flex-grow: 1.0;
 }
 
